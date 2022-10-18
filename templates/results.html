@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    
+  <title>Results</title>
+</head>
+<body>
+    
+<nav class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand mr-0 mr-md-2" href="#">Bollinger Bands</a>
+        
+</nav>
+    
+<nav class="navbar navbar-secondary bg-secondary" id="navbarTogglerDemo02">
+    <ul class="nav nav-tabs nav-muted">
+        <li class="nav-item">
+            <a class="nav-link text-white" href="/info">Info</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-white" href="/">Calculator</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-white" href="/history">History</a>
+        </li>
+
+        <li class="nav-item">
+            {% if not session[previous]: %}
+                <a class="nav-link active" href="/results">Results</a>
+            {% else %}
+                <a class="nav-link disabled" href="#">Results</a>
+            {% endif %}
+        </li>
+        
+    </ul>
+</nav>
+
+<div>{{graph | safe}}</div>
+
+</body>
