@@ -1,7 +1,7 @@
 import os
-from flask import Flask, render_template, jsonify, request, flash, redirect, session, g
+from flask import Flask, Response, session, render_template, jsonify, request, flash, redirect
 from flask_debugtoolbar import DebugToolbarExtension
-from data import run_Simulation, stdev_options, ema_options, Get_Raw
+from data import run_Simulation, stdev_options, ema_options, Get_Raw, make_chart
 from Models import db, connect_db, Point, Ticker, Operation
 from forms import SimulationForm
 import plotly.express as px
@@ -42,46 +42,60 @@ def build_graph():
 @app.route('/', methods=["GET","POST"])
 def runSim():
     """main page where users start their simulation"""
-
     form = SimulationForm()
 
     if form.validate_on_submit():
         ticker = form.ticker.data
         EMA = form.EMAres.data
         sigma = form.STDmult.data
+        #saves the form data in the session, then renders loading screen while processing
+        session["sim"] = [ticker,EMA,sigma]
+        return redirect("/load")
 
-        raw = Get_Raw(ticker)
-        if not raw:
-            flash(f"No results for symbol: {ticker} try a symbol from the S&P 500", 'danger')
-            return redirect('/')
-
-        comparison, strat, buyHold, totalDays, strat_held = run_Simulation(raw,EMA,sigma)
-        
-        
-        
-        ticker_UD = Ticker.query.filter(Ticker.symbol == ticker).one_or_none()
-        if not ticker_UD:
-            ticker_UD = Ticker(symbol = ticker, stock_performance = comparison, weight = 1)
-        else:
-            ticker_UD.stock_performance = (ticker_UD.stock_performance* ticker_UD.weight + comparison)/(ticker_UD.weight +1)
-            ticker_UD.weight +=1
-            
-
-
-        return redirect(f"/results/{simID}")
-
-    return render_template('Home.html', form=form)
+    return render_template('Home.html', form_obj=form)
     
 
-@app.route('/results/<strat_id>')
-def single_result(strat_id):
+@app.route('/load', methods = ['GET'])
+def loading_screen():
+    if "sim" in session:
+        return render_template('loading.html')
+    return redirect('/')
 
+@app.route('/sim')
+def sim_results():
+    if not "sim" in session:
+        return redirect('/')
+        
+    ticker =  session["sim"][0]
+    EMA = session["sim"][1]
+    sigma = session["sim"][2]
+
+    raw = Get_Raw(ticker)
+    try:
+        chart = make_chart(raw)
+
+    except:
+        flash(f"No results for symbol: {ticker} try a symbol from the S&P 500", 'danger')
+        return redirect('/')
+        
+    
+    existing = Operation.query.filter((Operation.params == f"{EMA}X{sigma}") & (Operation.ticker_symbol == ticker)).one_or_none()
+        
+    if existing:
+        return render_template('strategy.html',results = existing, chart = chart)
+
+    results = Operation.run(ticker,EMA,sigma,raw)
+     
+    db.session.add(results)
+    db.session.commit()    
+    return render_template("strategy.html",results = results, chart = chart)
     
 
 
 
 @app.route('/results', methods=["GET", "POST"])
-def signup():
+def show_all_results():
+    """shows a chart of all results averaged for each strategy"""
 
     data = build_graph()
     data[0][0]=4
@@ -95,8 +109,12 @@ def signup():
     fig.layout.width = 1200
 
     return  render_template('results.html', graph= pio.to_html(fig,full_html=False))
-    
+  
 @app.route('/info')
 def info():
+    render_template('loading.html')
+    flash('hi there','danger')
     return render_template('info.html')
+
+
 

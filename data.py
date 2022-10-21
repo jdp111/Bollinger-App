@@ -3,6 +3,8 @@ import pandas as pd
 #from get_all_tickers import get_tickers as gt
 import time
 import numpy as np
+import plotly.express as px
+import plotly.io as pio
 
 timeRange = '10y'
 resolution = '1d'
@@ -45,22 +47,17 @@ def get_price_data(EMAresolution,raw_data):
     when bought at open price
     """
 
-    trunc_dates = raw_data.index[EMAresolution:].values.tolist()
-    trunc_div   = raw_data.Dividends[EMAresolution:].values.tolist()
-    trunc_split = raw_data[['Stock Splits']][EMAresolution:].values.tolist()
-    print(len(trunc_dates))
-    print(len(trunc_div))
-    print(len(trunc_split))
-    print(raw_data.Open[EMAresolution:])
-    
-    priceData = {'OpenPrice':raw_data.Open[EMAresolution:].values.tolist(),
-                    'div' : trunc_div,
-                    'split' : trunc_split,
+    trunc_dates = raw_data.index.values.tolist()[EMAresolution:]
+    trunc_div   = raw_data.Dividends.values.tolist()[EMAresolution:]
+    trunc_split = raw_data['Stock Splits'].values.tolist()[EMAresolution:]
+    open = raw_data.Open.values.tolist()[EMAresolution:]
+    priceData = {'OpenPrice': open,
+                    'Div' : trunc_div,
+                    'split' : trunc_split
                 }
     
 
     df = pd.DataFrame(priceData, index = trunc_dates)
-    #df.set_index([trunc_dates,'date'])
     return df
 
 
@@ -90,8 +87,8 @@ def get_decision_data(EMAresolution,raw_data,std_mult):
 
         #this is the block of data analyzed for EMA and stdev with a length of EMAresolution
         #based on close because the stock will be bought on next open
-        #calculated on i-1 because the strategy will activate on the day after trigger
-        zone = raw_data.Close[(i-EMAresolution):i-1]
+        #add 1 because the endpoints on indexing are inclusive
+        zone = raw_data.Close[(i+1-EMAresolution):i]
 
         currEMA = sum(zone)/len(zone)
         currSTDev = STDev_calc(zone,currEMA,std_mult)
@@ -106,46 +103,93 @@ def get_decision_data(EMAresolution,raw_data,std_mult):
 
 
 
+
 def run_Simulation(Raw_Data,EMAres,STD_Mult):
-    price_data = get_price_data(EMAres,Raw_Data)
-    graph_data = get_decision_data(EMAres,Raw_Data,STD_Mult)
-    close = graph_data.ClosePrice
-    highBol = graph_data.SellH
-    lowBol = graph_data.BuyL
+    price_data = get_price_data(EMAres,Raw_Data) # Close, EMA, BollH, BollL
+    graph_data = get_decision_data(EMAres,Raw_Data,STD_Mult) # Open, divs, splits
+    close = graph_data.ClosePrice.values
+    highBol = graph_data.SellH.values
+    lowBol = graph_data.BuyL.values
+    open = price_data.OpenPrice.values
+    div = price_data.Div.values
+    split = price_data.split.values
+
     holding = []
     stock_multiplier = 1
-    total_days = 0
-    performance = {"performance": 0, "days": 0 }   #units %/day
-    buy_hold_perf = (close[-1]/close[0]-1) / len(close) # %/day
+    total_days = len(price_data.index)
+    #total performance
+    performance = {"performance": 0, "days": 0 }   #units %/day, days
     
-    for i in range(price_data):
-        if close[i] < lowBol[i]:
-            price = price_data.OpenPrice[i] * stock_multiplier
-            bought_cond = (price,0, 0)
-            holding.append(bought_cond)
+    total_divs = 0
+    #these variables keep track of where the price is (higher or lower than the band region)
+    low = False  #the price will begin inside the band region
+    high = False
 
-        if close[i] > highBol[i]:
-            sell_price = price_data.OpenPrice[i] * stock_multiplier
+    for i in range(1,len(price_data.index)):
 
-            for buy_price, divs, days in holding:
-                Ret = (sell_price + divs)/buy_price - 1 # %
+        # calculate at close[i-1] because stocks are bought the day after buy signals
+        # these 2 if statements will never trigger on the same run
+        if close[i-1] < lowBol[i-1]: #price falls low outside the band region     
+            low = True               #price shows outside
+        if close[i-1] >= lowBol[i-1] and low: #determine buy signal, triggers when price falls back into band region
+            low = False
+            buy_price = open[i] * stock_multiplier   #buy stock
+            bought_cond = [buy_price,0, 0]   #saves two variables for addition of dividends and days held
+            holding.append(bought_cond)  #collects open stock positions
+
+        # these 2 if statements will never trigger on the same run
+        if close[i-1] > highBol[i-1]: #price falls high outside the band region
+            high = True
+        if close[i-1] <= highBol[i-1] and high:#determine sell signal
+            high = False
+            for buy_div_days in holding: # run sale on all open positions
+                buy = buy_div_days[0]
+                days = buy_div_days[2]
+
+                sell = open[i] * stock_multiplier + buy_div_days[1]  # $ amount @sell
+                Ret_rate = np.log(sell/buy)/days *100  # %/day return based on the formula Pf/Pi = exp(r*t) where r is rate of increase
                 #calculate the weighted average for total return
-                weighted_perf = Ret + performance["performance"]*performance["days"]
-                performance["days"] += days
-                perf = weighted_perf/performance["days"]
-                performance["performance"] = perf
-        
-        for buy_price, divs, days in holding:
-            divs += price_data.div[i]
-        
-        if price_data.split[i]:
-            stock_multiplier *= price_data.split[i]
+                #weights return on stock by days held, and total performance by total days held
+                weighted_perf = Ret_rate*days + performance["performance"]*performance["days"]  # %
+                performance["days"] += days           #adds to total days
+                performance["performance"] = weighted_perf/performance["days"]  # %/day averages return over whole period
+                
+            holding = []  # when the stocks in "holding" are sold, the array is cleared for new stocks
 
-        total_days +=1
+        for holds in holding:
+            holds[1] += div[i]   # adds any div amount to all open positions
+            holds[2] += 1        # progresses day count for open positions
+        
+        if split[i]:
+            stock_multiplier *= split[i] # contributes a split if one happens
+
+        total_divs += div[i]
     
+    BH_endprice = close[-1] * stock_multiplier + total_divs
+    buy_hold_perf =   np.log(BH_endprice/close[0])/total_days *100  # %/day return based on the formula Pf/Pi = exp(r*t) where r is rate of increase
 
-    strat_perf = performance["performance"]
-    relative_perf = ((strat_perf+1) - (buy_hold_perf+1))*100
+    strat_perf =   performance["performance"] # %/day total strategy performance per day
+    strat_held =   performance["days"]
+    relative_perf = ((strat_perf - buy_hold_perf) / buy_hold_perf)*100  # % difference in performance of the strategy
 
-    return (relative_perf,strat_perf,buy_hold_perf,total_days,performance["days"])
+    # this function sleeps so when the program calls the api again for the chart, it is not overloaded
+    time.sleep(1)
 
+    return relative_perf,strat_perf,buy_hold_perf,total_days,strat_held
+
+
+
+
+
+def make_chart(raw):
+    xdata = [raw.index[i*30] for i in range((len(raw.index)-1)//30)]
+    ydata = [raw.Close[i*30] for i in range((len(raw.index)-1)//30)]
+    df = pd.DataFrame({"dates" : xdata, "price": ydata})
+    
+    fig = px.line(df, 
+        x = "dates",
+        y = "price"
+        )
+    fig.layout.height = 700
+    fig.layout.width = 1200
+    return pio.to_html(fig,full_html=False)

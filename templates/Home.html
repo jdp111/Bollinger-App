@@ -19,7 +19,7 @@
       <a class="nav-link text-white" href="/info">Info</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link active" href="#">Calculator</a>
+      <a class="nav-link active" href="/">Calculator</a>
     </li>
     <li class="nav-item">
       <a class="nav-link text-white" href="/history">History</a>
@@ -34,6 +34,27 @@
     
   </ul>
   </nav>
+
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+      {% for msg in messages %}
+          <p class = 'alert alert-danger'>{{msg}}</p>
+      {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method = 'POST'>
+{{ form_obj.hidden_tag() }}
+
+{% for field in form_obj: %}
+    {% if field.widget.input_type != 'hidden' %}
+        <p>{{field.label}} {{field}}</p>
+    {% endif %}
+{% endfor %}
+
+<input type="submit" value = "Submit">
+</form>
+
 
 </body>
 
