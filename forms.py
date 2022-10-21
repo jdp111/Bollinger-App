@@ -6,4 +6,4 @@ class SimulationForm(FlaskForm):
     """form for running simulation"""
     ticker = StringField('Ticker Symbol')
     EMAres = IntegerField('EMA Resolution', validators = [validators.NumberRange(min=15, max=25)])
-    STDmult = FloatField('σ Multiplier', validators = [validators.NumberRange(min=0.8,max=3.0)])
+    STDmult = FloatField('σ Multiplier', validators = [validators.NumberRange(min=0.5,max=3.0)])

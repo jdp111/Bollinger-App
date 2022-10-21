@@ -118,8 +118,13 @@ def show_all_results():
   
 @app.route('/info')
 def info():
+    """page with info about bollinger bands"""
     render_template('loading.html')
     return render_template('info.html')
 
+@app.route('/tickers')
+def list_tickers():
+    all_tickers = Ticker.query.all()
+    return render_template('tickers.html', tickers = all_tickers)
 
 

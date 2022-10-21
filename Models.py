@@ -24,6 +24,7 @@ class Ticker(db.Model):
     symbol = db.Column(db.String(6), primary_key = True)
     stock_performance = db.Column(db.Float)
     weight = db.Column(db.Integer)
+    buy_hold_performance = db.Column(db.Float)
 
 
 class Operation(db.Model):
@@ -59,10 +60,13 @@ class Operation(db.Model):
             ticker_UD = Ticker(symbol = ticker, stock_performance = comparison, weight = 1)
             db.session.add(ticker_UD)
         else:
-            ticker_UD.stock_performance = (ticker_UD.stock_performance* ticker_UD.weight + comparison)/(ticker_UD.weight +1)
+            
             ticker_UD.weight +=1
+            ticker_UD.stock_performance = (ticker_UD.stock_performance* ticker_UD.weight + comparison)/(ticker_UD.weight)
+            
+        ticker_UD.buy_hold_performance = buyHold    
         db.session.commit()
-        
+
         sim = Operation(
             params = f"{EMA}X{sigma}",
             ticker_symbol = ticker,
