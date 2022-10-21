@@ -6,9 +6,9 @@ import numpy as np
 import plotly.express as px
 import plotly.io as pio
 
-timeRange = '10y'
+timeRange = 'max'
 resolution = '1d'
-stdev_options = [0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
+stdev_options = [0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
 ema_options = [25,24,23,22,21,20,19,18,17,16,15]
 
 def Get_Raw(ticker):
@@ -147,7 +147,7 @@ def run_Simulation(Raw_Data,EMAres,STD_Mult):
                 days = buy_div_days[2]
 
                 sell = open[i] * stock_multiplier + buy_div_days[1]  # $ amount @sell
-                Ret_rate = np.log(sell/buy)/days *100  # %/day return based on the formula Pf/Pi = exp(r*t) where r is rate of increase
+                Ret_rate = round(np.log(sell/buy)/days,3) *100  # %/day return based on the formula Pf/Pi = exp(r*t) where r is rate of increase
                 #calculate the weighted average for total return
                 #weights return on stock by days held, and total performance by total days held
                 weighted_perf = Ret_rate*days + performance["performance"]*performance["days"]  # %
@@ -166,16 +166,16 @@ def run_Simulation(Raw_Data,EMAres,STD_Mult):
         total_divs += div[i]
     
     BH_endprice = close[-1] * stock_multiplier + total_divs
-    buy_hold_perf =   np.log(BH_endprice/close[0])/total_days *100  # %/day return based on the formula Pf/Pi = exp(r*t) where r is rate of increase
+    buy_hold_perf =   round(np.log(BH_endprice/close[0])/total_days,3 )*100  # %/day return based on the formula Pf/Pi = exp(r*t) where r is rate of increase
 
     strat_perf =   performance["performance"] # %/day total strategy performance per day
     strat_held =   performance["days"]
-    relative_perf = ((strat_perf - buy_hold_perf) / buy_hold_perf)*100  # % difference in performance of the strategy
+    relative_perf = round((strat_perf - buy_hold_perf) / buy_hold_perf ,3)*100  # % difference in performance of the strategy
 
     # this function sleeps so when the program calls the api again for the chart, it is not overloaded
     time.sleep(1)
 
-    return relative_perf,strat_perf,buy_hold_perf,total_days,strat_held
+    return round(relative_perf,2),round(strat_perf,4),round(buy_hold_perf,4),total_days,strat_held
 
 
 
@@ -190,6 +190,6 @@ def make_chart(raw):
         x = "dates",
         y = "price"
         )
-    fig.layout.height = 700
-    fig.layout.width = 1200
+    fig.layout.height = 250
+    fig.layout.width = 500
     return pio.to_html(fig,full_html=False)

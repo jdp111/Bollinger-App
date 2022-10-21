@@ -4,6 +4,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from data import run_Simulation, stdev_options, ema_options, Get_Raw, make_chart
 from Models import db, connect_db, Point, Ticker, Operation
 from forms import SimulationForm
+import numpy as np
 import plotly.express as px
 import plotly.io as pio
 
@@ -24,7 +25,6 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
-db.drop_all()
 db.create_all()
 
 def build_graph():
@@ -32,9 +32,12 @@ def build_graph():
     for y in ema_options:
         row =[]
         for x in stdev_options:
-            index = f"{x}X{y}"
+            index = f"{y}X{x}"
             newPoint = Point.query.filter(Point.id == index).one_or_none()
-            row.append(newPoint)
+            if newPoint:
+                row.append(newPoint.strat_performance)
+            else:
+                row.append(None)
         array.append(row)
         
     return array
@@ -46,7 +49,7 @@ def runSim():
     form = SimulationForm()
 
     if form.validate_on_submit():
-        ticker = form.ticker.data
+        ticker = form.ticker.data.upper()
         EMA = form.EMAres.data
         sigma = form.STDmult.data
         #saves the form data in the session, then renders loading screen while processing
@@ -83,13 +86,16 @@ def sim_results():
     existing = Operation.query.filter((Operation.params == f"{EMA}X{sigma}") & (Operation.ticker_symbol == ticker)).one_or_none()
         
     if existing:
-        return render_template('strategy.html',results = existing, chart = chart)
+        relative_perf = (existing.sim_performance - existing.buy_hold_performance) / existing.buy_hold_performance*100 
+        return render_template('strategy.html',results = existing, graph = chart, percent = relative_perf, param = [ticker,EMA,sigma])
 
     results = Operation.run(ticker,EMA,sigma,raw)
 
     db.session.add(results)
     db.session.commit()    
-    return render_template("strategy.html",results = results, graph = chart)
+
+    relative_perf = (results.sim_performance - results.buy_hold_performance) / results.buy_hold_performance*100 
+    return render_template("strategy.html",results = results, graph = chart, percent = relative_perf, param = [ticker,EMA,sigma])
     
 
 
@@ -99,7 +105,6 @@ def show_all_results():
     """shows a chart of all results averaged for each strategy"""
 
     data = build_graph()
-    data[0][0]=4
     fig = px.imshow(data, 
                     labels=dict(x="σ Multiplier", y="EMA Resolution", color="performance (%)"),
                     x = [str(mult) for mult in stdev_options],

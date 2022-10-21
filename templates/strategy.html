@@ -9,7 +9,7 @@
 </head>
 <body>
     
-<nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-dark bg-dark d-flex  justify-content-center">
     <a class="navbar-brand mr-0 mr-md-2" href="#">Bollinger Bands</a>
         
 </nav>
@@ -37,8 +37,61 @@
     </ul>
 </nav>
 
-<div>
-    <img src="/plot.png" alt="">
+
+
+
+<div id = 'results graph' class = "text-center">
+<h1>Results for ticker symbol '{{param[0]}}'</h1>
+<h4>EMA resolution = {{param[1]}} days,    σ multiplier = {{param[2]}}</h4>
+<div class = "d-flex  justify-content-center">{{graph | safe}}</div>
+
+{% if results.sim_performance < results.buy_hold_performance %}
+    <h1 style = "color: rgb(201, 21, 57);">{{percent|round(2)}}%</h1>
+    <span>Your strategy performed </span>
+    <span style = "color: rgb(201, 21, 57); font-size: 15; font-weight: bolder;"> {{0-percent|round(2)}}% worse </span>
+    <span> than buying and holding a stock over the same period</span>
+
+{% else %}
+    <h1 style = "color: rgb(3, 131, 3);">+{{percent|round(2)}}</h1>
+    <p>Your strategy performed </p>
+    <p style = "color: rgb(3,131,3); font-size: 15; font-weight: bolder;"> {{percent|round(2)}}% better </p>
+    <p> than buying and holding a stock over the same period</p>
+{% endif %}
+<br><br>
+
+
+<div class="container">
+    <div class="row">
+        <div class = "col-2"></div>
+      <div class="col-4 bg-info" >
+        <h1>Your Strategy:</h1><br>
+        <h2>return:</h2>
+        <h3>{{(results.sim_performance*365)|round(2)}} %/year</h3><br>
+        <h2>Total Gain:</h2>
+        <h3>{{(results.sim_performance*results.sim_days) |round(2)}} %</h3><br>
+        <h3>Total time with open positions:</h3>
+        <h4>{{(results.sim_days*1.4)|round|int}} days, or {{(results.sim_days/365*1.4)|round(1)}} years</h4>
+        <p></p>
+      </div>
+      <div class="col-4 bg-info">
+        <h1>Buy/Hold:</h1><br>
+        <h2>return:</h2>
+        <h3>{{(results.buy_hold_performance*365)|round(2)}} %/year</h3><br>
+        <h2>Total Gain:</h2>
+        <h3>{{(results.buy_hold_performance*results.total_days)|round(2)}} %</h3><br>
+        <h3>Total time with open positions:</h3>
+        <h4>{{(results.total_days*1.4)|round|int}} days, or {{(results.total_days/365*1.4)|round(1)}} years</h4>
+        <p></p>
+      </div>
+      <div class = "col-2"></div>
+    </div>
+</div>
+<form action="/results">
+    <button type="submit" class="btn btn-success" style = "margin-bottom: 80px; margin-top: 35px; font-size: 30px; border-radius: 7px;">All Results</button>
+</form>
 </div>
 
+
+
 </body>
+</html>
