@@ -24,6 +24,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
+db.drop_all()
 db.create_all()
 
 def build_graph():
@@ -85,10 +86,10 @@ def sim_results():
         return render_template('strategy.html',results = existing, chart = chart)
 
     results = Operation.run(ticker,EMA,sigma,raw)
-     
+
     db.session.add(results)
     db.session.commit()    
-    return render_template("strategy.html",results = results, chart = chart)
+    return render_template("strategy.html",results = results, graph = chart)
     
 
 
@@ -113,7 +114,6 @@ def show_all_results():
 @app.route('/info')
 def info():
     render_template('loading.html')
-    flash('hi there','danger')
     return render_template('info.html')
 
 

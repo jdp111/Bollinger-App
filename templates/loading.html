@@ -1,13 +1,13 @@
 <!doctype html>
 <head>
-    <link rel= "stylesheet" type= "text/css" href= "{{url_for('static',filename='styles/main.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>Loading</title>
 </head>
 
-<div id="preloader">
+<div class = "jumbotron d-flex  justify-content-center">
     <div id="status">&nbsp</div>
-    <h1 class="ml13">ANALYZING...</h1>
+    <h1 class="ml13">ANALYZING...</h1> <br>
+    <h2>(This may take a moment)</h2>
 </div>
-
-<title>Loading</title>
 
 <script> window.location.replace('/sim'); </script>

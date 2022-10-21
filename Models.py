@@ -45,7 +45,7 @@ class Operation(db.Model):
         comparison, strat, buyHold, totalDays, strat_held = run_Simulation(raw,EMA,sigma)
         
         point = Point.query.get(f"{EMA}X{sigma}")
-        
+
         if not point:
             point = Point(id = f"{EMA}X{sigma}", entry_count = 1, strat_performance=comparison)
             db.session.add(point)
@@ -61,8 +61,8 @@ class Operation(db.Model):
         else:
             ticker_UD.stock_performance = (ticker_UD.stock_performance* ticker_UD.weight + comparison)/(ticker_UD.weight +1)
             ticker_UD.weight +=1
-        db.session.add(point)
-
+        db.session.commit()
+        
         sim = Operation(
             params = f"{EMA}X{sigma}",
             ticker_symbol = ticker,
