@@ -45,7 +45,7 @@
   <form method = 'POST'>
     {{ form_obj.hidden_tag() }}
 
-    <p>{{form_obj.ticker.label}} {{form_obj.ticker(placeholder="ex. 'TSLA','SHOP','JBLU'")}}</p>
+    <p>{{form_obj.ticker.label}} {{form_obj.ticker(placeholder="ex. 'TSLA','SHOP','AMD'")}}</p>
     <p>{{form_obj.EMAres.label}} {{form_obj.EMAres(type = 'number',min='10',max='24',step='1',placeholder='(10-24)')}}</p>
     <P>{{form_obj.STDmult.label}} {{form_obj.STDmult(type='number',min='0.2',max='2.0',step='0.1',placeholder ='(0.2-2.0)')}}</P>
 

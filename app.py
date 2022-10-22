@@ -86,14 +86,18 @@ def sim_results():
     existing = Operation.query.filter((Operation.params == f"{EMA}X{sigma}"), (Operation.ticker_symbol == ticker)).one_or_none()
         
     if existing:
-        relative_perf = (existing.sim_performance - existing.buy_hold_performance) / existing.buy_hold_performance*100 
+        relative_perf = (existing.sim_performance - existing.buy_hold_performance) / (existing.buy_hold_performance)*100 
         return render_template('strategy.html',results = existing, graph = chart, percent = relative_perf, param = [ticker,EMA,sigma])
-
-    results = Operation.run(ticker,EMA,sigma,raw)
+    
+    try:
+        results = Operation.run(ticker,EMA,sigma,raw)
+    except:
+        flash('Something went wrong. It is possible the stock you picked is not in the database, or does not have stored data for a long enough period', 'danger')
+        return redirect('/')
     db.session.add(results)
     db.session.commit()    
 
-    relative_perf = (results.sim_performance - results.buy_hold_performance) / results.buy_hold_performance*100 
+    relative_perf = (results.sim_performance - results.buy_hold_performance) / (results.buy_hold_performance)*100 
     return render_template("strategy.html",results = results, graph = chart, percent = relative_perf, param = [ticker,EMA,sigma])
     
 
@@ -115,7 +119,7 @@ def info():
 @app.route('/tickers')
 def list_tickers():
     """shows a table of stock symbols and their performance as an average"""
-    all_tickers = Ticker.query.all()
+    all_tickers = Ticker.query.order_by(Ticker.symbol)
     return render_template('tickers.html', tickers = all_tickers)
 
 
@@ -134,7 +138,7 @@ def run_sims():
     populates the results with a few common stocks over all strategies
     """
 
-    stocks = ['TSLA','AAPL']#,'NVDA','NFLX','AMZN','MSFT']
+    stocks = ['TSLA','AAPL','NVDA','NFLX','AMZN','MSFT']
 
     for stock in stocks:
         raw = Get_Raw(stock)
@@ -148,6 +152,7 @@ def run_sims():
                     result = Operation.run(stock,j,i,raw)
                     db.session.add(result)
                     db.session.commit()
+                    time.sleep(0.2)
 
     return redirect('/')
         

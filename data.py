@@ -46,8 +46,19 @@ def get_price_data(EMAresolution,raw_data):
     """
 
     trunc_dates = raw_data.index.values.tolist()[EMAresolution:]
-    trunc_div   = raw_data.Dividends.values.tolist()[EMAresolution:]
-    trunc_split = raw_data['Stock Splits'].values.tolist()[EMAresolution:]
+
+    #some stocks do not have dividends. this function changes dividends to zero if excepts
+    try:
+        trunc_div   = raw_data.Dividends.values.tolist()[EMAresolution:]
+    except:
+        trunc_div = np.zeros(len(trunc_dates))
+    
+    #some stocks do not have splits. this function changes splits to zero if excepts
+    try:
+        trunc_split = raw_data['Stock Splits'].values.tolist()[EMAresolution:]
+    except:
+        trunc_split = np.zeros(len(trunc_dates))
+
     open = raw_data.Open.values.tolist()[EMAresolution:]
     priceData = {'OpenPrice': open,
                     'Div' : trunc_div,
@@ -66,7 +77,7 @@ def get_decision_data(EMAresolution,raw_data,std_mult):
     
     """
     #truncates the prices so the ema can calculate on the full range
-    if len(raw_data.index) <= EMAresolution:
+    if len(raw_data.index) <= 365:
         return None
 
 
@@ -163,15 +174,27 @@ def run_Simulation(Raw_Data,EMAres,STD_Mult):
 
         total_divs += div[i]
     
+    
+    
+
     BH_endprice = close[-1] * stock_multiplier + total_divs
     buy_hold_perf =   round(np.log(BH_endprice/close[0])/total_days,3 )*100  # %/day return based on the formula Pf/Pi = exp(r*t) where r is rate of increase
+    
+    #this function to prevent division by 0
+    if np.absolute(buy_hold_perf) < .00000001:
+            buy_hold_perf = .00000001
 
     strat_perf =   performance["performance"] # %/day total strategy performance per day
     strat_held =   performance["days"]
     relative_perf = round((strat_perf - buy_hold_perf) / buy_hold_perf ,3)*100  # % difference in performance of the strategy
 
-    # this function sleeps so if the program calls the api again rapidly, it is not overloaded
+    # if the strategy performs infinitely better, it must be limited
+    if relative_perf > 400:
+        relative_perf = 400
 
-    return round(relative_perf,2),round(strat_perf,4),round(buy_hold_perf,4),total_days,strat_held
+    if relative_perf < -400:
+        relative_perf = -400
+    
+    return relative_perf,strat_perf,buy_hold_perf,total_days,strat_held
 
 
