@@ -1,5 +1,3 @@
-"""SQLAlchemy models for Warbler."""
-
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from data import run_Simulation
@@ -67,7 +65,7 @@ class Operation(db.Model):
             ticker_UD.stock_performance = (ticker_UD.stock_performance* ticker_UD.weight + comparison)/(ticker_UD.weight)
             
         ticker_UD.buy_hold_performance = buyHold    
-        
+        db.session.commit()
 
         sim = Operation(
             params = f"{EMA}X{sigma}",

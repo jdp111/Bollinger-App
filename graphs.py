@@ -2,7 +2,9 @@ import plotly.express as px
 import plotly.io as pio
 import pandas as pd
 from data import ema_options, stdev_options
-from Models import Point, Ticker, Operation
+from Models import Point, Operation
+
+
 def build_total_graph():
     """builds graph of total results over all strats"""
     array = []
@@ -62,6 +64,10 @@ def build_ticker_graph(ticker):
 
 
 def make_chart(raw):
+    """
+    shows a simple price chart for a ticker
+    to be displayed on a single stock view
+    """
     xdata = [raw.index[i*30] for i in range((len(raw.index)-1)//30)]
     ydata = [raw.Close[i*30] for i in range((len(raw.index)-1)//30)]
     df = pd.DataFrame({"dates" : xdata, "price": ydata})

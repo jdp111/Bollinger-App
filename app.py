@@ -51,12 +51,22 @@ def runSim():
 
 @app.route('/load', methods = ['GET'])
 def loading_screen():
+    """
+    middle ground between running a sim and seeing results
+    must include data in session
+    """
     if "sim" in session:
         return render_template('loading.html')
     return redirect('/')
 
+
 @app.route('/sim')
 def sim_results():
+    """
+    shows the results for a custom simulation. 
+    runs from the loading screen using data passed through the session
+    can be accessed until a new sim is run or the browser is closed
+    """
     if not "sim" in session:
         return redirect('/')
         
@@ -94,20 +104,24 @@ def show_all_results():
     """shows a chart of all results averaged for each strategy"""
     return  render_template('results.html', graph= build_total_graph())
   
+
 @app.route('/info')
 def info():
     """page with info about bollinger bands"""
     render_template('loading.html')
     return render_template('info.html')
 
+
 @app.route('/tickers')
 def list_tickers():
+    """shows a table of stock symbols and their performance as an average"""
     all_tickers = Ticker.query.all()
     return render_template('tickers.html', tickers = all_tickers)
 
 
 @app.route('/tickers/<symbol>')
 def ticker_performance(symbol):
+    """shows the performance matrix of a single stock for the simulations that have been run"""
     ticker = Ticker.query.get_or_404(symbol)
     graph = build_ticker_graph(ticker)
     return render_template('single_ticker.html', ticker = ticker, graph = graph)
