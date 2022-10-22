@@ -16,25 +16,22 @@
 <nav class="navbar navbar-secondary bg-secondary" id="navbarTogglerDemo02">
           <ul class="nav nav-tabs nav-muted">
     <li class="nav-item">
-      <a class="nav-link text-white" href="/info">Info</a>
+      <a class="nav-link text-white" href="/info">How it works</a>
+    <li class="nav-item">
+        <a class="nav-link active" href="/">Custom simulation</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link active" href="/">Calculator</a>
+        <a class="nav-link text-white" href="/tickers">Stock performance</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link text-white" href="/history">History</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link text-white" href="/tickers">Stocks</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link text-white" href="/results">Results</a>
+        <a class="nav-link text-white" href="/results">All results</a>
     </li>
     
     
   </ul>
   </nav>
 
+  
   {% with messages = get_flashed_messages() %}
   {% if messages %}
       {% for msg in messages %}
@@ -43,18 +40,18 @@
   {% endif %}
 {% endwith %}
 
-<form method = 'POST'>
-{{ form_obj.hidden_tag() }}
 
-{% for field in form_obj: %}
-    {% if field.widget.input_type != 'hidden' %}
-        <p>{{field.label}} {{field}}</p>
-    {% endif %}
-{% endfor %}
+<div class = " py-md-5 pl-md-5">
+  <form method = 'POST'>
+    {{ form_obj.hidden_tag() }}
 
-<input type="submit" value = "Submit">
-</form>
+    <p>{{form_obj.ticker.label}} {{form_obj.ticker(placeholder="ex. 'TSLA','SHOP','JBLU'")}}</p>
+    <p>{{form_obj.EMAres.label}} {{form_obj.EMAres(type = 'number',min='10',max='24',step='1',placeholder='(10-24)')}}</p>
+    <P>{{form_obj.STDmult.label}} {{form_obj.STDmult(type='number',min='0.2',max='2.0',step='0.1',placeholder ='(0.2-2.0)')}}</P>
 
+    <input type ="submit" class="btn btn-success" value = "Submit">
+  </form>
+</div>
 
 </body>
 

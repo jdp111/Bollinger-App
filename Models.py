@@ -39,6 +39,7 @@ class Operation(db.Model):
     sim_days = db.Column(db.Integer)
     total_days = db.Column(db.Integer)
 
+
     @classmethod
     def run(cls,ticker,EMA,sigma,raw):
         """ adds a method when it is run by user"""
@@ -50,8 +51,9 @@ class Operation(db.Model):
         if not point:
             point = Point(id = f"{EMA}X{sigma}", entry_count = 1, strat_performance=comparison)
             db.session.add(point)
+
         else:
-            point.strat_performance = (point.strat_performance * point.entry_count + point.strat_performance)/(point.entry_count + 1)
+            point.strat_performance = (point.strat_performance * point.entry_count + comparison)/(point.entry_count + 1)
             point.entry_count +=1
 
         #this part updates the information for the given stock and measures aggregate response
@@ -59,13 +61,13 @@ class Operation(db.Model):
         if not ticker_UD:
             ticker_UD = Ticker(symbol = ticker, stock_performance = comparison, weight = 1)
             db.session.add(ticker_UD)
-        else:
             
+        else:
             ticker_UD.weight +=1
             ticker_UD.stock_performance = (ticker_UD.stock_performance* ticker_UD.weight + comparison)/(ticker_UD.weight)
             
         ticker_UD.buy_hold_performance = buyHold    
-        db.session.commit()
+        
 
         sim = Operation(
             params = f"{EMA}X{sigma}",

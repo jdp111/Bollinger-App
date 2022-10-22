@@ -3,13 +3,11 @@ import pandas as pd
 #from get_all_tickers import get_tickers as gt
 import time
 import numpy as np
-import plotly.express as px
-import plotly.io as pio
 
 timeRange = 'max'
 resolution = '1d'
-stdev_options = [0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0]
-ema_options = [25,24,23,22,21,20,19,18,17,16,15]
+stdev_options = [0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0]
+ema_options = [24,23,22,21,20,19,18,17,16,15,14,13,12,11,10]
 
 def Get_Raw(ticker):
     """
@@ -22,12 +20,13 @@ def Get_Raw(ticker):
     [['Stock Splits']] -- stock split multiplier
     .index  --date
     """
+    time.sleep(1)
     try:
         data =yf.Ticker(str(ticker)).history(period = timeRange, interval = resolution)
     except:
         return False
     return data
-
+   
 
 def STDev_calc(array,avg,mult):
     """
@@ -37,7 +36,6 @@ def STDev_calc(array,avg,mult):
     for el in array:
         S += (el - avg) **2 / len(array)
     stdev = S**(.5)
-
     return stdev*mult
 
 
@@ -172,24 +170,8 @@ def run_Simulation(Raw_Data,EMAres,STD_Mult):
     strat_held =   performance["days"]
     relative_perf = round((strat_perf - buy_hold_perf) / buy_hold_perf ,3)*100  # % difference in performance of the strategy
 
-    # this function sleeps so when the program calls the api again for the chart, it is not overloaded
-    time.sleep(1)
+    # this function sleeps so if the program calls the api again rapidly, it is not overloaded
 
     return round(relative_perf,2),round(strat_perf,4),round(buy_hold_perf,4),total_days,strat_held
 
 
-
-
-
-def make_chart(raw):
-    xdata = [raw.index[i*30] for i in range((len(raw.index)-1)//30)]
-    ydata = [raw.Close[i*30] for i in range((len(raw.index)-1)//30)]
-    df = pd.DataFrame({"dates" : xdata, "price": ydata})
-    
-    fig = px.line(df, 
-        x = "dates",
-        y = "price"
-        )
-    fig.layout.height = 250
-    fig.layout.width = 500
-    return pio.to_html(fig,full_html=False)

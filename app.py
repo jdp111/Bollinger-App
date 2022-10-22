@@ -1,15 +1,12 @@
 import os
-from flask import Flask, Response, session, render_template, jsonify, request, flash, redirect
+from flask import Flask, session, render_template, flash, redirect
 from flask_debugtoolbar import DebugToolbarExtension
-from data import run_Simulation, stdev_options, ema_options, Get_Raw, make_chart
-from Models import db, connect_db, Point, Ticker, Operation
+from data import stdev_options, ema_options, Get_Raw
+from Models import db, connect_db, Ticker, Operation
 from forms import SimulationForm
-import numpy as np
-import plotly.express as px
-import plotly.io as pio
+from graphs import build_total_graph, build_ticker_graph, make_chart
+import time
 
-#from forms import 
-#from models import
 
 CURR_USER_KEY = "curr_user"
 
@@ -27,21 +24,6 @@ toolbar = DebugToolbarExtension(app)
 connect_db(app)
 db.create_all()
 
-def build_graph():
-    array = []
-    for y in ema_options:
-        row =[]
-        for x in stdev_options:
-            index = f"{y}X{x}"
-            newPoint = Point.query.filter(Point.id == index).one_or_none()
-            if newPoint:
-                row.append(newPoint.strat_performance)
-            else:
-                row.append(None)
-        array.append(row)
-        
-    return array
-
 
 @app.route('/', methods=["GET","POST"])
 def runSim():
@@ -54,6 +36,14 @@ def runSim():
         sigma = form.STDmult.data
         #saves the form data in the session, then renders loading screen while processing
         session["sim"] = [ticker,EMA,sigma]
+        
+        if EMA not in ema_options:
+            flash(f"invalid EMA resolution. Resolution must be an integer value between {ema_options[0]} and {ema_options[-1]}", "danger")
+
+        if sigma not in stdev_options:
+            flash(f"invalid EMA resolution. Resolution must be a number between {stdev_options[0]} and {stdev_options[-1]}", "danger")
+
+
         return redirect("/load")
 
     return render_template('Home.html', form_obj=form)
@@ -83,14 +73,13 @@ def sim_results():
         return redirect('/')
         
     
-    existing = Operation.query.filter((Operation.params == f"{EMA}X{sigma}") & (Operation.ticker_symbol == ticker)).one_or_none()
+    existing = Operation.query.filter((Operation.params == f"{EMA}X{sigma}"), (Operation.ticker_symbol == ticker)).one_or_none()
         
     if existing:
         relative_perf = (existing.sim_performance - existing.buy_hold_performance) / existing.buy_hold_performance*100 
         return render_template('strategy.html',results = existing, graph = chart, percent = relative_perf, param = [ticker,EMA,sigma])
 
     results = Operation.run(ticker,EMA,sigma,raw)
-
     db.session.add(results)
     db.session.commit()    
 
@@ -103,18 +92,7 @@ def sim_results():
 @app.route('/results', methods=["GET", "POST"])
 def show_all_results():
     """shows a chart of all results averaged for each strategy"""
-
-    data = build_graph()
-    fig = px.imshow(data, 
-                    labels=dict(x="σ Multiplier", y="EMA Resolution", color="performance (%)"),
-                    x = [str(mult) for mult in stdev_options],
-                    y = [str(res) for res in ema_options],
-                    color_continuous_scale=[[0,'red'],[.5,'yellow'],[1,'green']]
-                    )
-    fig.layout.height = 700
-    fig.layout.width = 1200
-
-    return  render_template('results.html', graph= pio.to_html(fig,full_html=False))
+    return  render_template('results.html', graph= build_total_graph())
   
 @app.route('/info')
 def info():
@@ -128,3 +106,34 @@ def list_tickers():
     return render_template('tickers.html', tickers = all_tickers)
 
 
+@app.route('/tickers/<symbol>')
+def ticker_performance(symbol):
+    ticker = Ticker.query.get_or_404(symbol)
+    graph = build_ticker_graph(ticker)
+    return render_template('single_ticker.html', ticker = ticker, graph = graph)
+
+
+@app.route('/runAllSimulationsAndAddToDatabase')
+def run_sims():
+    """
+    designed to be run once when app is implemented, 
+    populates the results with a few common stocks over all strategies
+    """
+
+    stocks = ['TSLA','AAPL']#,'NVDA','NFLX','AMZN','MSFT']
+
+    for stock in stocks:
+        raw = Get_Raw(stock)
+
+        for i in stdev_options:
+            for j in ema_options:
+                existing = Operation.query.filter((Operation.params == f"{j}X{i}"),(Operation.ticker_symbol == stock)).one_or_none()
+                if existing:
+                    continue
+                if not existing:
+                    result = Operation.run(stock,j,i,raw)
+                    db.session.add(result)
+                    db.session.commit()
+
+    return redirect('/')
+        
