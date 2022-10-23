@@ -9,7 +9,7 @@ resolution = '1d'
 stdev_options = [0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0]
 ema_options = [24,23,22,21,20,19,18,17,16,15,14,13,12,11,10]
 
-def Get_Raw(ticker):
+def Get_Raw(ticker,resolution=resolution):
     """
     returns data from a given ticker with options for
     .Open   --open price

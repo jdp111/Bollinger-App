@@ -74,9 +74,9 @@ def sim_results():
     EMA = session["sim"][1]
     sigma = session["sim"][2]
 
-    raw = Get_Raw(ticker)
+    raw = Get_Raw(ticker, resolution='1mo')
     try:
-        chart = make_chart(raw)
+        chart = make_chart(raw,250,500)
 
     except:
         flash(f"No results for symbol: {ticker} try a symbol from the S&P 500", 'danger')
@@ -128,7 +128,9 @@ def ticker_performance(symbol):
     """shows the performance matrix of a single stock for the simulations that have been run"""
     ticker = Ticker.query.get_or_404(symbol)
     graph = build_ticker_graph(ticker)
-    return render_template('single_ticker.html', ticker = ticker, graph = graph)
+    raw = Get_Raw(ticker.symbol,resolution='1mo')
+    price_chart = make_chart(raw,270,1100)
+    return render_template('single_ticker.html', ticker = ticker, graph = graph, price_chart=price_chart)
 
 
 @app.route('/runAllSimulationsAndAddToDatabase')

@@ -58,24 +58,24 @@ def build_ticker_graph(ticker):
                         color_continuous_scale=[[0,'red'],[.5,'yellow'],[1,'green']]
                         )
     fig.layout.height = 700
-    fig.layout.width = 1200
+    fig.layout.width = 1100
 
     return pio.to_html(fig,full_html=False)
 
 
-def make_chart(raw):
+def make_chart(raw, height, width):
     """
     shows a simple price chart for a ticker
     to be displayed on a single stock view
     """
-    xdata = [raw.index[i*30] for i in range((len(raw.index)-1)//30)]
-    ydata = [raw.Close[i*30] for i in range((len(raw.index)-1)//30)]
-    df = pd.DataFrame({"dates" : xdata, "price": ydata})
+    xdata = raw.index
+    ydata = raw.Close
+    df = pd.DataFrame({"Date" : xdata, "Price": ydata})
     
     fig = px.line(df, 
-        x = "dates",
-        y = "price"
+        x = "Date",
+        y = "Price"
         )
-    fig.layout.height = 250
-    fig.layout.width = 500
+    fig.layout.height = height
+    fig.layout.width = width
     return pio.to_html(fig,full_html=False)

@@ -40,9 +40,9 @@
   {% endif %}
 {% endwith %}
 
-
+<h1 style="margin-left: 6%; margin-top: 60px;">Results for all strategies</h1>
 <div class = " py-md-5 pl-md-5">
-  <form method = 'POST'>
+  <form method = 'POST' style="margin-left: 6%; margin-top: 20px;">
     {{ form_obj.hidden_tag() }}
 
     <p>{{form_obj.ticker.label}} {{form_obj.ticker(placeholder="ex. 'TSLA','SHOP','AMD'")}}</p>
