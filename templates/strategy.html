@@ -45,15 +45,15 @@
 <div class = "d-flex  justify-content-center">{{graph | safe}}</div>
 
 {% if results.sim_performance < results.buy_hold_performance %}
-    <h1 style = "color: rgb(201, 21, 57);">{{percent|round(2)}}%</h1>
+    <h1 style = "color: rgb(201, 21, 57);">{{percent}}%</h1>
     <span>Your strategy performed </span>
-    <span style = "color: rgb(201, 21, 57); font-size: 15; font-weight: bolder;"> {{0-percent|round(2)}}% worse </span>
+    <span style = "color: rgb(201, 21, 57); font-size: 15; font-weight: bolder;"> {{0-percent}}% worse </span>
     <span> than buying and holding a stock over the same period</span>
 
 {% else %}
-    <h1 style = "color: rgb(3, 131, 3);">+{{percent|round(2)}}%</h1>
+    <h1 style = "color: rgb(3, 131, 3);">+{{percent}}%</h1>
     <p>Your strategy performed </p>
-    <p style = "color: rgb(3,131,3); font-size: 15; font-weight: bolder;"> {{percent|round(2)}}% better </p>
+    <p style = "color: rgb(3,131,3); font-size: 15; font-weight: bolder;"> {{percent}}% better </p>
     <p> than buying and holding a stock over the same period</p>
 {% endif %}
 <br><br>
@@ -65,9 +65,9 @@
       <div class="col-4 bg-info" >
         <h1>Your Strategy:</h1><br>
         <h2>return:</h2>
-        <h3>{{(results.sim_performance*365)|round(2)}} %/year</h3><br>
+        <h3>{{results.sim_performance}} %/year</h3><br>
         <h2>Total Gain:</h2>
-        <h3>{{(results.sim_performance*results.sim_days) |round(2)}} %</h3><br>
+        <h3>{{(results.sim_performance*results.sim_days*1.4/365) |round(2)}} %</h3><br>
         <h3>Total time with open positions:</h3>
         <h4>{{(results.sim_days*1.4)|round|int}} days, or {{(results.sim_days/365*1.4)|round(1)}} years</h4>
         <p></p>
@@ -75,9 +75,9 @@
       <div class="col-4 bg-info">
         <h1>Buy/Hold:</h1><br>
         <h2>return:</h2>
-        <h3>{{(results.buy_hold_performance*365)|round(2)}} %/year</h3><br>
+        <h3>{{results.buy_hold_performance}} %/year</h3><br>
         <h2>Total Gain:</h2>
-        <h3>{{(results.buy_hold_performance*results.total_days)|round(2)}} %</h3><br>
+        <h3>{{(results.buy_hold_performance*results.total_days*1.4/365)|round(2)}} %</h3><br>
         <h3>Total time with open positions:</h3>
         <h4>{{(results.total_days*1.4)|round|int}} days, or {{(results.total_days/365*1.4)|round(1)}} years</h4>
         <p></p>

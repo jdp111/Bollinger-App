@@ -74,7 +74,7 @@ def sim_results():
     EMA = session["sim"][1]
     sigma = session["sim"][2]
 
-    raw = Get_Raw(ticker, resolution='1mo')
+    raw = Get_Raw(ticker, resolution='1d')
     try:
         chart = make_chart(raw,250,500)
 
@@ -86,18 +86,18 @@ def sim_results():
     existing = Operation.query.filter((Operation.params == f"{EMA}X{sigma}"), (Operation.ticker_symbol == ticker)).one_or_none()
         
     if existing:
-        relative_perf = (existing.sim_performance - existing.buy_hold_performance) / (existing.buy_hold_performance)*100 
+        relative_perf = round((existing.sim_performance - existing.buy_hold_performance) / (existing.buy_hold_performance)*100,2)  
         return render_template('strategy.html',results = existing, graph = chart, percent = relative_perf, param = [ticker,EMA,sigma])
     
-    try:
-        results = Operation.run(ticker,EMA,sigma,raw)
-    except:
-        flash('Something went wrong. It is possible the stock you picked is not in the database, or does not have stored data for a long enough period', 'danger')
-        return redirect('/')
+    #try:
+    results = Operation.run(ticker,EMA,sigma,raw)
+    #except:
+        #flash('Something went wrong. It is possible the stock you picked is not in the database, or does not have stored data for a long enough period', 'danger')
+        #return redirect('/')
     db.session.add(results)
     db.session.commit()    
 
-    relative_perf = (results.sim_performance - results.buy_hold_performance) / (results.buy_hold_performance)*100 
+    relative_perf = round((results.sim_performance - results.buy_hold_performance) / (results.buy_hold_performance)*100,2) 
     return render_template("strategy.html",results = results, graph = chart, percent = relative_perf, param = [ticker,EMA,sigma])
     
 

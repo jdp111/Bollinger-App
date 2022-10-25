@@ -6,7 +6,10 @@ from Models import Point, Operation
 
 
 def build_total_graph():
-    """builds graph of total results over all strats"""
+    """
+    builds graph of total results over all strats
+    units of %/year of strategy
+    """
     array = []
     for y in ema_options:
         row =[]
@@ -14,7 +17,7 @@ def build_total_graph():
             index = f"{y}X{x}"
             newPoint = Point.query.filter(Point.id == index).one_or_none()
             if newPoint:
-                row.append(newPoint.strat_performance)
+                row.append(round(newPoint.strat_performance))
             else:
                 row.append(None)
         array.append(row)
@@ -22,7 +25,7 @@ def build_total_graph():
     data = array
 
     fig = px.imshow(data, 
-                        labels=dict(x="σ Multiplier", y="EMA Resolution", color="performance (%)"),
+                        labels=dict(x="σ Multiplier", y="EMA Resolution", color="performance (%/year)"),
                         x = [str(mult) for mult in stdev_options],
                         y = [str(res) for res in ema_options],
                         color_continuous_scale=[[0,'red'],[.5,'yellow'],[1,'green']]
@@ -43,8 +46,7 @@ def build_ticker_graph(ticker):
             index = f"{y}X{x}"
             newPoint = Operation.query.filter((Operation.params==index),(Operation.ticker_symbol==ticker.symbol)).one_or_none()
             if newPoint:
-                performance = (newPoint.sim_performance - newPoint.buy_hold_performance)/newPoint.buy_hold_performance * 100
-                row.append(performance)
+                row.append(newPoint.sim_performance)
             else:
                 row.append(None)
         array.append(row)
@@ -52,7 +54,7 @@ def build_ticker_graph(ticker):
     data = array
 
     fig = px.imshow(data, 
-                        labels=dict(x="σ Multiplier", y="EMA Resolution", color="performance (%)"),
+                        labels=dict(x="σ Multiplier", y="EMA Resolution", color="performance (%/year)"),
                         x = [str(mult) for mult in stdev_options],
                         y = [str(res) for res in ema_options],
                         color_continuous_scale=[[0,'red'],[.5,'yellow'],[1,'green']]

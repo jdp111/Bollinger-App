@@ -54,8 +54,8 @@
         <th scope="row">
             <a href="/tickers/{{ticker.symbol}}">{{ticker.symbol}}</a>
         </th>
-        <td>{{ticker.stock_performance|round(2)}} %</td>
-        <td>{{(ticker.buy_hold_performance *360)|round(2)}} %/yr</td>
+        <td>{{ticker.stock_performance}} %/yr</td>
+        <td>{{ticker.buy_hold_performance}} %/yr</td>
         <td>{{ticker.weight}}</td>
       </tr>
      

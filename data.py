@@ -77,27 +77,25 @@ def get_decision_data(EMAresolution,raw_data,std_mult):
     
     """
     #truncates the prices so the ema can calculate on the full range
-    if len(raw_data.index) <= 365:
+    if len(raw_data.index.values) <= 365:
         return None
 
-
-    trunc_range = range(EMAresolution,len(raw_data.index.values))
-    trunc_dates = raw_data.index[EMAresolution:]
-
+    trunc_dates = raw_data.index.values[EMAresolution:]
+    
     #data required is EMA and stdev for decision making and div, split, and price for calculating buy, sell and gain prices
     decisionData = {
-                 'ClosePrice' : raw_data.Close[EMAresolution:],
+                 'ClosePrice' : raw_data.Close.values.tolist()[EMAresolution:],
                  'EMA' : [],
                  'SellH':[],
                  'BuyL':[]
                  }
-
-    for i in trunc_range:
+    
+    for i in range((len(trunc_dates))):
 
         #this is the block of data analyzed for EMA and stdev with a length of EMAresolution
         #based on close because the stock will be bought on next open
         #add 1 because the endpoints on indexing are inclusive
-        zone = raw_data.Close[(i+1-EMAresolution):i]
+        zone = raw_data.Close[i:i+EMAresolution]
 
         currEMA = sum(zone)/len(zone)
         currSTDev = STDev_calc(zone,currEMA,std_mult)
@@ -107,9 +105,7 @@ def get_decision_data(EMAresolution,raw_data,std_mult):
         decisionData['BuyL'].append(currEMA-currSTDev)
 
     df = pd.DataFrame(decisionData,index = trunc_dates)
-
     return df
-
 
 
 
@@ -156,7 +152,7 @@ def run_Simulation(Raw_Data,EMAres,STD_Mult):
                 days = buy_div_days[2]
 
                 sell = open[i] * stock_multiplier + buy_div_days[1]  # $ amount @sell
-                Ret_rate = round(np.log(sell/buy)/days,3) *100  # %/day return based on the formula Pf/Pi = exp(r*t) where r is rate of increase
+                Ret_rate = np.log(sell/buy)/days *100 # %/day return based on the formula Pf/Pi = exp(r*t) where r is rate of increase
                 #calculate the weighted average for total return
                 #weights return on stock by days held, and total performance by total days held
                 weighted_perf = Ret_rate*days + performance["performance"]*performance["days"]  # %
@@ -174,27 +170,14 @@ def run_Simulation(Raw_Data,EMAres,STD_Mult):
 
         total_divs += div[i]
     
-    
-    
 
     BH_endprice = close[-1] * stock_multiplier + total_divs
-    buy_hold_perf =   round(np.log(BH_endprice/close[0])/total_days,3 )*100  # %/day return based on the formula Pf/Pi = exp(r*t) where r is rate of increase
+    buy_hold_perf =  round(np.log(BH_endprice/close[0])/total_days*365*100,2 )  # %/year return based on the formula Pf/Pi = exp(r*t) where r is rate of increase
     
-    #this function to prevent division by 0
-    if np.absolute(buy_hold_perf) < .00000001:
-            buy_hold_perf = .00000001
-
-    strat_perf =   performance["performance"] # %/day total strategy performance per day
+    strat_perf =   round(performance["performance"] * 365,2) # %/year total strategy performance per day
     strat_held =   performance["days"]
-    relative_perf = round((strat_perf - buy_hold_perf) / buy_hold_perf ,3)*100  # % difference in performance of the strategy
 
-    # if the strategy performs infinitely better, it must be limited
-    if relative_perf > 400:
-        relative_perf = 400
-
-    if relative_perf < -400:
-        relative_perf = -400
-    
-    return relative_perf,strat_perf,buy_hold_perf,total_days,strat_held
+           #%/year    #%/year       #days      #days
+    return strat_perf,buy_hold_perf,total_days,strat_held
 
 
