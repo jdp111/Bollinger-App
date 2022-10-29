@@ -1,6 +1,5 @@
 import os
 from flask import Flask, session, render_template, flash, redirect
-from flask_debugtoolbar import DebugToolbarExtension
 from data import stdev_options, ema_options, Get_Raw
 from Models import db, connect_db, Ticker, Operation
 from forms import SimulationForm
@@ -18,8 +17,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (os.environ.get('DATABASE_URL', 'postgre
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
-toolbar = DebugToolbarExtension(app)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "would a hacker guess this?")
 
 connect_db(app)
 db.create_all()
