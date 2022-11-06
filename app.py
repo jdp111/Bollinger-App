@@ -1,5 +1,4 @@
 import os
-import nothing
 from flask import Flask, session, render_template, flash, redirect
 from data import stdev_options, ema_options, Get_Raw
 from Models import db, connect_db, Ticker, Operation
