@@ -28,5 +28,5 @@ The performance of a custom simulation is added to the total results and average
 The 'Stock Performance' tab shows a list of stocks, their performance, and simulations run. Users can access more information by clicking on a stock. This will show them a simple performance graph, and another strategy performance graph, similar to the performance graph for all strategies.
 
 App Mechanics:
-This app is made with Flask in Python, interfacing with HTML through Jinja, and the database through SQLAlchemy and PostgreSQL. The database stores performance information for stocks and performance information for individual simulations. Yfinance was used for stock market source data, and analysis on the data is performed by custom functions made by me. 
+This app is made with Flask in Python, interfacing with HTML through Jinja, and the database through SQLAlchemy and PostgreSQL. The database stores performance information for stocks and performance information for individual simulations. Yfinance was used for stock market source data, and analysis on the data is performed by custom functions made by me. Graphs were made using plotly in Python.
 
