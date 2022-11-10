@@ -61,7 +61,7 @@ class Operation(db.Model):
             db.session.add(ticker_UD)
             
         else:            
-            ticker_UD.stock_performance = (ticker_UD.stock_performance* ticker_UD.weight + strat)/(ticker_UD.weight+1)
+            ticker_UD.stock_performance = round((ticker_UD.stock_performance* ticker_UD.weight + strat)/(ticker_UD.weight+1),2)
             ticker_UD.weight +=1
 
         ticker_UD.buy_hold_performance = buyHold #%/year
